@@ -10,15 +10,16 @@ Why is it faster? This is fatser, because each thread has its own private variab
 
 ## Example optimisation of the loop using reduction
 ```cpp
-#pragma omp parallel // parallel region starts here using reduction of the global sum variable
+#pragma omp parallel reduction(+: sum)// parallel region starts here using reduction of the global sum variable
   { // idea for parallelisation: split up loop iterations between threads
     int num_threads = omp_get_num_threads(); // used as increment in for loop
     int thread_id = omp_get_thread_num();
-    double sum_local = 0.0; // for summing up heights locally
     for (int i = thread_id; i < num_steps; i += num_threads) {
       double x = (i + 0.5) * width; // midpoint
-      sum_local = sum_local + (1.0 / (1.0 + x * x)); // add new height
+      sum = sum + (1.0 / (1.0 + x * x)); // add new height
     }
-    sum += sum_local;
   } // parallel region ends here
 ```
+
+## PS
+i made a mistake, in the original version the atomic was used right, i thought it was used in every loop, but i think my version with reduction is cleaner beause we dont need the local sum. my analysis in the top means that every loop iteration and thread mades a atmoc add to the global sum. 
