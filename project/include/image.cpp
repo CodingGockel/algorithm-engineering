@@ -1,4 +1,14 @@
 #include "image.h"
+#include <cstring>
+
+#define GREYSCALE_ALPHA_MODE 2
+
+#define MAX_ALPHA_VALUE 255
+#define MIN_ALPHA_VALUE 0
+#define THRESHOLD_ALPHA_VALUE 128
+
+#define MAX_GREY_VALUE 255
+#define MIN_GREY_VALUE 0
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -6,36 +16,59 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-bool loadImage(const std::string& IMAGE_PATH, image& image, int mode)
+bool load_image(const std::string& IMAGE_PATH, image& image)
 {
-    int channels_file = 0;
-
-    unsigned char* data = stbi_load(IMAGE_PATH.c_str(), &image.width, &image.height, &channels_file, mode);
+    int w, h, c;
+    unsigned char* data = stbi_load(IMAGE_PATH.c_str(), &w, &h, &c, GREYSCALE_ALPHA_MODE);
     
     if(!data)
     {
         return false;
     }
+    
+    image.height = h;
+    image.width = w;
 
-    image.mode = mode;
+    const size_t n = (image.width) * image.height;
+    image.pixels.resize(n);
+    std::memcpy(image.pixels.data(), data, n * sizeof(pixel));
+    
+    for(pixel& p : image.pixels)
+    {
+        if(p.alpha < MAX_ALPHA_VALUE)
+        {
+            image.has_alpha = true;
+            break;
+        }
+    }
 
-    image.channels = (mode != 0) ? mode : channels_file;
-
-    image.pixels.assign(data, data + image.width * image.height * image.channels);
     stbi_image_free(data);
     return true;
 }
 
-unsigned char calculate_otsu_threshold(const image& image) {
+void mask_image(image& image)
+{
+    if(image.has_alpha)
+    {
+        apply_alpha_mask(image);
+    }else{
+        uint8_t threshold = calculate_otsu_threshold(image);
+        apply_threshold_mask(image, threshold);
+    }
+}
+
+uint8_t calculate_otsu_threshold(image& image) {
     if (image.pixels.empty()) return 0;
 
     // get frequency of grey values
     std::array<int, 256> histogram = {0};
-    for (unsigned char pixel : image.pixels) {
-        histogram[pixel]++;
+
+    for (pixel& p : image.pixels)
+    {
+        histogram[p.grey]++;
     }
 
-    int total_pixels = image.pixels.size();
+    int total_pixels_count = static_cast<int>(image.pixels.size());
 
     //get sum of all grey values
     double sum_total = 0.0;
@@ -51,11 +84,12 @@ unsigned char calculate_otsu_threshold(const image& image) {
     unsigned char best_threshold = 0;
 
     //calc all possible threshholds
-    for (int t = 0; t < 256; ++t) {
+    for (int t = 0; t < 256; ++t) 
+    {
         weight_background += histogram[t]; //pixels in backgroud
         if (weight_background == 0) continue;
 
-        weight_foreground = total_pixels - weight_background; //pixels in the foreground
+        weight_foreground = total_pixels_count - weight_background; //pixels in the foreground
         if (weight_foreground == 0) break;
 
         sum_background += static_cast<double>(t * histogram[t]);
@@ -71,7 +105,8 @@ unsigned char calculate_otsu_threshold(const image& image) {
                                   (mean_background - mean_foreground);
 
         // chekc for new max
-        if (variance_between > max_variance) {
+        if (variance_between > max_variance) 
+        {
             max_variance = variance_between;
             best_threshold = static_cast<unsigned char>(t);
         }
@@ -80,31 +115,41 @@ unsigned char calculate_otsu_threshold(const image& image) {
     return best_threshold;
 }
 
-void flatten_alpha_to_white(image& img) {
-    if (img.channels != 2) return;
-    std::vector<unsigned char> grey(img.width * img.height);
-    for (size_t i = 0; i < grey.size(); ++i) {
-        unsigned g = img.pixels[2*i], a = img.pixels[2*i + 1];
-        grey[i] = (g * a + 255 * (255 - a) + 127) / 255;
-    }
-    img.pixels = std::move(grey);
-    img.channels = 1;
-}
-
-void apply_threshold(image& image, unsigned char threshold) {
-    for (unsigned char& pixel : image.pixels) {
-        pixel = (pixel > threshold) ? 255 : 0;
+void apply_threshold_mask(image& image, uint8_t threshold) {
+    for(pixel& p : image.pixels) 
+    {
+        if(p.grey > threshold)
+        {
+            p.grey = MAX_GREY_VALUE;
+            
+        }else{
+            p.grey = MIN_GREY_VALUE;
+        }
     }
 }
 
-bool saveImage(const std::string& path, const image& img)
+void apply_alpha_mask(image& image)
 {
-    if (img.pixels.empty() || img.channels == 0) {
+    for(pixel& p : image.pixels)
+    {
+        if(p.alpha < THRESHOLD_ALPHA_VALUE)
+        {
+            p.grey = MAX_GREY_VALUE;
+        }else{
+            p.grey = MIN_GREY_VALUE;
+        }
+        p.alpha = MAX_ALPHA_VALUE;
+    }
+}
+
+bool save_image(const std::string& path, const image& img)
+{
+    if (img.pixels.empty()) 
+    {
         return false;
     }
 
-    int stride = img.width * img.channels;   // Bytes pro Bildzeile
-    int result = stbi_write_png(path.c_str(), img.width, img.height,
-                                img.channels, img.pixels.data(), stride);
-    return result != 0;   // stbi_write_png gibt 0 bei Fehler zurück
+    int stride = img.width * 2;
+    int result = stbi_write_png(path.c_str(), img.width, img.height, 2, img.pixels.data(), stride);
+    return result != 0;
 }

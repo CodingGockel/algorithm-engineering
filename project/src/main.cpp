@@ -7,18 +7,12 @@
 int main()
 {
     image image;
-    char threshold;
 
+    load_image("resources/images/baer.png", image);
 
-    loadImage("resources/images/baer.png", image);
-    
-    flatten_alpha_to_white(image);
+    mask_image(image);
 
-    threshold = calculate_otsu_threshold(image);
-
-    apply_threshold(image, threshold);
-
-    saveImage("build/images/out.png", image);
+    save_image("build/images/out.png", image);
 
     return 0;
 }
