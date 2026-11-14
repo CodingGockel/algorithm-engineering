@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include<array>
 #include<cstdint>
 
 struct pixel
@@ -34,8 +33,9 @@ struct point
 };
 
 bool load_image(const std::string& IMAGE_PATH, image& image);
-uint8_t calculate_otsu_threshold(image& image);
-void apply_threshold_mask(image& image, uint8_t threshold);
-void apply_alpha_mask(image& image);
 bool save_image(const std::string& OUTPUT_PATH, const image& image);
+
 void mask_image(image& imgage);
+void apply_alpha_mask(image& image);
+void apply_threshold_mask(image& image, uint8_t threshold);
+uint8_t calculate_otsu_threshold(image& image);

@@ -1,5 +1,6 @@
 #include "image.h"
 #include <cstring>
+#include <array>
 
 #define GREYSCALE_ALPHA_MODE 2
 
@@ -46,6 +47,18 @@ bool load_image(const std::string& IMAGE_PATH, image& image)
     return true;
 }
 
+bool save_image(const std::string& path, const image& img)
+{
+    if (img.pixels.empty()) 
+    {
+        return false;
+    }
+
+    int stride = img.width * 2;
+    int result = stbi_write_png(path.c_str(), img.width, img.height, 2, img.pixels.data(), stride);
+    return result != 0;
+}
+
 void mask_image(image& image)
 {
     if(image.has_alpha)
@@ -54,6 +67,33 @@ void mask_image(image& image)
     }else{
         uint8_t threshold = calculate_otsu_threshold(image);
         apply_threshold_mask(image, threshold);
+    }
+}
+
+void apply_alpha_mask(image& image)
+{
+    for(pixel& p : image.pixels)
+    {
+        if(p.alpha < THRESHOLD_ALPHA_VALUE)
+        {
+            p.grey = MAX_GREY_VALUE;
+        }else{
+            p.grey = MIN_GREY_VALUE;
+        }
+        p.alpha = MAX_ALPHA_VALUE;
+    }
+}
+
+void apply_threshold_mask(image& image, uint8_t threshold) {
+    for(pixel& p : image.pixels) 
+    {
+        if(p.grey > threshold)
+        {
+            p.grey = MAX_GREY_VALUE;
+            
+        }else{
+            p.grey = MIN_GREY_VALUE;
+        }
     }
 }
 
@@ -113,43 +153,4 @@ uint8_t calculate_otsu_threshold(image& image) {
     }
 
     return best_threshold;
-}
-
-void apply_threshold_mask(image& image, uint8_t threshold) {
-    for(pixel& p : image.pixels) 
-    {
-        if(p.grey > threshold)
-        {
-            p.grey = MAX_GREY_VALUE;
-            
-        }else{
-            p.grey = MIN_GREY_VALUE;
-        }
-    }
-}
-
-void apply_alpha_mask(image& image)
-{
-    for(pixel& p : image.pixels)
-    {
-        if(p.alpha < THRESHOLD_ALPHA_VALUE)
-        {
-            p.grey = MAX_GREY_VALUE;
-        }else{
-            p.grey = MIN_GREY_VALUE;
-        }
-        p.alpha = MAX_ALPHA_VALUE;
-    }
-}
-
-bool save_image(const std::string& path, const image& img)
-{
-    if (img.pixels.empty()) 
-    {
-        return false;
-    }
-
-    int stride = img.width * 2;
-    int result = stbi_write_png(path.c_str(), img.width, img.height, 2, img.pixels.data(), stride);
-    return result != 0;
 }
