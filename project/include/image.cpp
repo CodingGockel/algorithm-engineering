@@ -2,15 +2,6 @@
 #include <cstring>
 #include <array>
 
-#define GREYSCALE_ALPHA_MODE 2
-
-#define MAX_ALPHA_VALUE 255
-#define MIN_ALPHA_VALUE 0
-#define THRESHOLD_ALPHA_VALUE 128
-
-#define MAX_GREY_VALUE 255
-#define MIN_GREY_VALUE 0
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -93,6 +84,31 @@ void apply_threshold_mask(image& image, uint8_t threshold) {
             
         }else{
             p.grey = MIN_GREY_VALUE;
+        }
+    }
+}
+
+std::vector<point> get_outline_points(image& image)
+{
+    /*
+        iterate pixels:
+            if(alpha < Threshold alpha)
+    */
+}
+
+void get_outline(image& image, std::vector<point>& points)
+{
+    for(int y = 0; y < image.height; y++)
+    {
+        for(int x = 0; x < image.width; x++)
+        {
+            if(!image.has_white_neighbor(x,y))
+            {
+                image.at(x,y).alpha = MIN_ALPHA_VALUE;
+            }else{
+                points.push_back({double(x), double(y)});
+                image.at(x,y).grey = MIN_GREY_VALUE;
+            }
         }
     }
 }
