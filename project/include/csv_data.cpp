@@ -1,10 +1,11 @@
 #include<csv_data.h>
 
-void read_csv_data(const std::string PATH_TO_FILE, csv_data& data_csv, const char delim = ',', const int dimension = 2)
+void read_csv_data(const std::string PATH_TO_FILE, csv_data& data_csv, const char delim, const size_t dimension)
 {
     std::ifstream file(PATH_TO_FILE);
 
-    if (!file.is_open()) {
+    if (!file.is_open()) 
+    {
         std::cerr << "cant read csv file at path" << PATH_TO_FILE << std::endl;
         return;
     }
@@ -12,18 +13,21 @@ void read_csv_data(const std::string PATH_TO_FILE, csv_data& data_csv, const cha
     std::string line;
     int idx = 0;
 
-    while (std::getline(file, line)) {
+    while (std::getline(file, line)) 
+    {
         std::vector<std::string> line_splitted = split(line, delim);
 
         if(line_splitted.size() != dimension)
         {
             std::cout << "dimension of file and selected dimension does not match";
+            return;
         }
 
-        if(idx = 0)
+        if(idx == 0)
         {
             data_csv.x_axis = line_splitted[0];
             data_csv.y_axis = line_splitted[1];
+            idx++;
             continue;
         }
         data_csv.data.push_back({std::stod(line_splitted[0]), std::stod(line_splitted[1])});

@@ -88,14 +88,6 @@ void apply_threshold_mask(image& image, uint8_t threshold) {
     }
 }
 
-std::vector<point> get_outline_points(image& image)
-{
-    /*
-        iterate pixels:
-            if(alpha < Threshold alpha)
-    */
-}
-
 void get_outline(image& image, std::vector<point>& points)
 {
     for(int y = 0; y < image.height; y++)

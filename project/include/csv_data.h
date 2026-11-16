@@ -17,6 +17,7 @@ struct csv_data
     int length = 0;
 };
 
-void read_csv_data(const std::string PATH_TO_FILE, csv_data& data);
+void read_csv_data(const std::string PATH_TO_FILE, csv_data& data, const char delim = ',', const size_t dimension = 2);
+std::vector<std::string> split(const std::string &s, char delim);
 
 

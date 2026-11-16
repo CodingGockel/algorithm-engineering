@@ -23,6 +23,7 @@ struct pixel
 struct image
 {
     std::vector<pixel> pixels;
+    std::vector<point> points;
     int width = 0;
     int height = 0;
     bool has_alpha = false;
