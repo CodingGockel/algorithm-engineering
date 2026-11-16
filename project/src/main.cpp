@@ -22,6 +22,8 @@ int main()
     */
     read_csv_data("resources/data/aapl_2015_2017.csv", c_data);
 
+    std::cout << "(" << c_data.x_axis << "/" << c_data.y_axis << ")" << std::endl;
+
     for (const point& p : c_data.data)
     {
         std::cout << "(" << p.x << "/" << p.y << ")" << std::endl;

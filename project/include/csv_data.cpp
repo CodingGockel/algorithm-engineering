@@ -34,7 +34,6 @@ void read_csv_data(const std::string PATH_TO_FILE, csv_data& data_csv, const cha
         idx++;
     }
     file.close();
-
     data_csv.length = idx;
 }
 
