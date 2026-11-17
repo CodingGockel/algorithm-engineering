@@ -1,2 +1,5 @@
-g++ -std=c++17 -O2 -Wall -Iinclude -Ilibs src/main.cpp include/image.cpp include/csv_data.cpp -o build/main
-./build/main
+make            # baut build/main
+make test       # Unit-Tests
+./build/main    # Standard: aapl_2015_2017.csv + baer.png -> build/output/
+./build/main --csv resources/data/sp500_monatsrenditen.csv --image resources/images/rakete.png
+./build/main --help
